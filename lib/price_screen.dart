@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'coin_data.dart';
+import 'networking/networkHelper.dart';
 
 class PriceScreen extends StatefulWidget {
   @override
@@ -6,6 +9,27 @@ class PriceScreen extends StatefulWidget {
 }
 
 class _PriceScreenState extends State<PriceScreen> {
+  String activeCurrency = 'USD';
+  String APIUrl = 'https://api.coindesk.com/v1/bpi/currentprice/';
+  String data = '232.223';
+  void getBTC(String cur) async {
+    NetworkHelper object  = NetworkHelper(APIUrl+cur);
+    var returnVar = await object.getdata();
+    var valInCur = jsonDecode(returnVar)['bpi'][activeCurrency]['rate'];
+    print(valInCur);
+    setState(() {
+      data = valInCur;
+    });
+  }
+
+  List<DropdownMenuItem> getDropdownItems() {
+    List<DropdownMenuItem<String>> dropdownItems = [];
+    for (String item in currenciesList) {
+      var newItem = DropdownMenuItem(child: Text(item), value: item,);
+      dropdownItems.add(newItem);
+    }
+    return dropdownItems;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +51,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = ? USD',
+                  '1 BTC = $data $activeCurrency',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
@@ -42,7 +66,16 @@ class _PriceScreenState extends State<PriceScreen> {
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 30.0),
             color: Colors.lightBlue,
-            child: null,
+            child: DropdownButton<String>(
+                value: activeCurrency,
+                items: getDropdownItems(),
+                onChanged: (value) {
+                  setState(() {
+                    activeCurrency = value;
+                    getBTC(value);
+                  });
+                },
+            ),
           ),
         ],
       ),
